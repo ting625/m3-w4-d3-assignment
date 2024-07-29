@@ -30,6 +30,7 @@ router.get('/registrants', basic.check((req, res) => {
     });
 }));
 
+// For debugging only, can be commented later
 router.get('/thankyou', (req, res) => {
   //res.send('It works!');
   res.render('thankyou', { title: 'Thank you page' });
@@ -40,10 +41,10 @@ router.post('/',
     [
         check('name')
         .isLength({ min: 1 })
-        .withMessage('Please enter a name'),
+        .withMessage('! Error: Please enter a name'),
         check('email')
         .isLength({ min: 1 })
-        .withMessage('Please enter an email'),
+        .withMessage('! Error: Please enter an email'),
     ],
     (req, res) => {
         //console.log(req.body);
@@ -51,7 +52,10 @@ router.post('/',
         if (errors.isEmpty()) {
           const registration = new Registration(req.body);
           registration.save()
-            .then(() => {res.send('Thank you for your registration!');})
+            .then(() => {
+              res.render('thankyou', { title: 'Thank you page' });
+              //res.send('Thank you for your registration!');
+            })
             .catch((err) => {
               console.log(err);
               res.send('Sorry! Something went wrong.');
