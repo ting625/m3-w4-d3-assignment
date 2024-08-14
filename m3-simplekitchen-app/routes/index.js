@@ -10,6 +10,8 @@ const basic = auth.basic({
   file: path.join(__dirname, '../users.htpasswd'),
 });
 
+const bcrypt = require('bcrypt');
+
 router.get('/', (req, res) => {
   //res.send('It works!');
   res.render('index', { title: 'Index page' });
@@ -45,13 +47,26 @@ router.post('/',
         check('email')
         .isLength({ min: 1 })
         .withMessage('! Error: Please enter an email'),
+        check('username')
+        .isLength({ min: 1 })
+        .withMessage('! Error: Please enter a username'),
+        check('password')
+        .isLength({ min: 1 })
+        .withMessage('! Error: Please enter a password'),
     ],
-    (req, res) => {
+    async (req, res) => {
         //console.log(req.body);
         const errors = validationResult(req);
         if (errors.isEmpty()) {
           const registration = new Registration(req.body);
+
+          // generate salt to hash password
+          const salt = await bcrypt.genSalt(10);
+          // set user password to hashed password
+          registration.password = await bcrypt.hash(registration.password, salt);
+          
           registration.save()
+
             .then(() => {
               res.render('thankyou', { title: 'Thank you page' });
               //res.send('Thank you for your registration!');
@@ -60,13 +75,14 @@ router.post('/',
               console.log(err);
               res.send('Sorry! Something went wrong.');
             });
-          } else {
+
+        } else {
             res.render('register', { 
                 title: 'Registration form',
                 errors: errors.array(),
                 data: req.body,
              });
-          }
+        }
     });
 
 module.exports = router;
